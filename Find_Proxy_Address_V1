@@ -1,0 +1,73 @@
+Function Create-CSV {
+
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]${CSV-Headers},
+        [string]${Destination-Path}
+    )
+
+        ${CSV-Headers} | Out-File ${Destination-Path} -Encoding ASCII
+}
+
+$Alias_Final_Header = "Username,AliasToAdd"
+$Alias_Final_Add = "PATH"
+
+Create-CSV -CSV-Headers $Alias_Final_Header -Destination-Path $Alias_Final_Add
+
+
+$Alias = Import-CSV -LiteralPath "PATH"
+
+Foreach ($user in $alias) {
+
+    $EmailAddress_Norm = ($user.EmailAddress_Norm)
+    $EmailAddress = ($user.EmailAddress)
+    $AliasToFind_1 = ($user.EmailAlias_1)
+    $AliasToFind_2 = ($User.EmailAlias_2)
+    $AliasToFind_3 = ($user.EmailAlias_3)
+
+
+    $FindUser = Get-ADUser -Filter {(userPrincipalName -eq $EmailAddress_Norm)} -Properties SamAccountName, ProxyAddresses | Select-Object SamAccountName, @{ L = "ProxyAddresses"; E = {($_.ProxyAddresses | Where-Object {$_ -like "smtp:*" }) -join ';'} }
+    $FindUser_SAM = ($FindUser.SamAccountName)
+    $FindUser_Proxy = ($FindUser.ProxyAddresses)
+
+        Foreach ($User_Proxy in $FindUser_Proxy) {
+            $Seperate_Proxys = $User_Proxy.Split(';')
+            
+                Foreach ($Proxy in $Seperate_Proxys) {
+                    #Write-Host $Proxy -BackgroundColor "Green" -ForegroundColor "Black"
+                        
+                        if ($Proxy -eq $EmailAddress)
+                            {
+                            Write-Host "Proxy : $Proxy matched Primary Email Address : $EmailAddress" -BackgroundColor "Green" -ForegroundColor "Black"
+                            }
+                        
+                            Else {
+                        
+                                if ($Proxy -eq $AliasToFind_1)
+                                    {
+                                    Write-Host "Proxy : $Proxy matched Staff Alias : $AliasToFind_1" -BackgroundColor "Green" -ForegroundColor "Black"
+                                    }
+                        
+                                    Else {
+                        
+                                        If ($Proxy -eq $AliasToFind_2)
+                                            {
+                                            Write-Host "Proxy : $Proxy matched Staff Alias : $AliasToFind_2" -BackgroundColor "White" -ForegroundColor "Black"
+                                            }
+                                            Else {
+                                                
+                                                If ($Proxy -eq $AliasToFind_3)
+                                                {
+                                                Write-Host "Proxy : $Proxy matched $AliasToFind_3"
+                                                }
+                                                    Else {
+                                                        Write-Host "$Proxy did not match" -BackgroundColor "Red" -ForegroundColor "White"
+                                                        $CSV_Add = $FindUser_SAM +","+ $Proxy
+                                                        $CSV_Add | Out-File $Alias_Final_Add -Append -Encoding ASCII
+                                                        }
+                                                }
+                                            }
+                                        }
+                        }
+                }
+}
