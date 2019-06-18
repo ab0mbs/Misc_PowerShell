@@ -7,7 +7,7 @@ $Aliases_New = Import-CSV -LiteralPath "IMPORT_PATH"
 #Start the Loop
 Foreach($Proxy_Aliases in $Aliases_New){
     
-    #Assign SamAccountName
+    #Assign SamAccountName from the csv to variable
     $Proxy_SamAccountName = $Proxy_Aliases.SamAccountName
     
     #Search using Get-ADUser
