@@ -57,7 +57,10 @@ foreach ($employee in $employeeData) {
             if ($config[$employee.EMPLOYEE_TYPE]['Members'] -notcontains $employeeADAccount.samaccountname) {
                 # Output employee to add
                 Write-Host "Add $($employee.WORK_EMAIL) to $($config['$employee.EMPLOYEE_TYPE']['GroupName'])" -Background "Green" -Foreground "Black"
-
+                
+                # Add employee to group
+                Add-ADGroupMember -Identity $config['$employee.EMPLOYEE_TYPE']['GroupName'] -Members $employeeADAccount.distinguishedname -Verbose
+                
                 # Add employee to employee array
                 $employeeArray += [PSCustomObject]@{
                     Username  = $employee.WORK_EMAIL
